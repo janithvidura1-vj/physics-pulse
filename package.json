@@ -22,12 +22,14 @@
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },
-  "devDependencies": {
+   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@types/canvas-confetti": "^1.6.4"
+  }
   }
 }
