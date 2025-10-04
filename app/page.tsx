@@ -10,14 +10,14 @@ import { TypeAnimation } from 'react-type-animation';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import toast, { Toaster } from 'react-hot-toast';
 import confetti from 'canvas-confetti';
-import { Home, BookOpen, BarChart2, User, Settings, Bookmark, Search, Moon, Sun, PlusCircle, Edit2, Trash2, ChevronLeft, ChevronRight, UploadCloud, Smile, LogOut, Layers } from 'lucide-react';
+import { Home, BookOpen, BarChart2, User, Settings, Bookmark, Search, Moon, Sun, PlusCircle, Edit2, Trash2, ChevronLeft, ChevronRight, UploadCloud, Smile, LogOut, Layers, Info } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 import 'react-circular-progressbar/dist/styles.css';
 
 // --- TYPE DEFINITIONS ---
 type Difficulty = 'easy' | 'medium' | 'hard';
 type Mode = 'practice' | 'exam';
-type Page = 'auth' | 'dashboard' | 'quiz-setup' | 'taking-quiz' | 'quiz-results' | 'leaderboard' | 'bookmarks' | 'admin-questions' | 'admin-motivation' | 'admin-users' | 'playground';
+type Page = 'auth' | 'dashboard' | 'quiz-setup' | 'taking-quiz' | 'quiz-results' | 'leaderboard' | 'bookmarks' | 'admin-questions' | 'admin-motivation' | 'admin-users' | 'playground' | 'about';
 type SubscriptionStatus = 'FREE' | 'ACTIVE' | 'EXPIRED';
 type MotivationType = 'QUOTE' | 'IMAGE';
 
@@ -87,17 +87,24 @@ const PhysicsPlatform = () => {
     const [bookmarked, setBookmarked] = useState<number[]>([]);
     const [currentQuiz, setCurrentQuiz] = useState<any | null>(null);
     const [theme, setTheme] = useState('light');
+    const [isClient, setIsClient] = useState(false); // For Hydration fix
+
+    // --- HOOKS ---
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
+        if (isClient) {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
                 setTheme(savedTheme);
                 document.documentElement.classList.toggle('dark', savedTheme === 'dark');
             }
         }
-    }, []);
+    }, [isClient]);
 
+    // --- FUNCTIONS ---
     const toggleTheme = () => {
         const newTheme = theme === 'light' ? 'dark' : 'light';
         setTheme(newTheme);
@@ -178,24 +185,22 @@ const PhysicsPlatform = () => {
         if (!user) return <AuthView onLogin={handleLogin} />;
         
         switch (page) {
-            case 'dashboard':
-                return <DashboardView user={user} motivationItems={motivationItems} />;
-            case 'quiz-setup':
-                return <QuizSetupView startQuiz={startQuiz} />;
+            case 'dashboard': return <DashboardView user={user} motivationItems={motivationItems} />;
+            case 'quiz-setup': return <QuizSetupView startQuiz={startQuiz} />;
             case 'taking-quiz':
                 if (!currentQuiz) { setPage('quiz-setup'); return null; }
                 return <TakingQuizView quiz={currentQuiz} setQuiz={setCurrentQuiz} onComplete={fireConfetti} setPage={setPage} />;
-            case 'admin-questions':
-                return <AdminQuestionsView questions={questions} deleteQuestion={deleteQuestion} addQuestion={addQuestion} handleJsonImport={handleJsonImport} />;
-            case 'admin-users':
-                return <AdminUsersView users={allUsers} updateUserSubscription={updateUserSubscription} />;
-            case 'playground':
-                return <div>Playground Page Placeholder</div>;
-            default:
-                setPage('dashboard');
-                return null;
+            case 'admin-questions': return <AdminQuestionsView questions={questions} deleteQuestion={deleteQuestion} addQuestion={addQuestion} handleJsonImport={handleJsonImport} />;
+            case 'admin-users': return <AdminUsersView users={allUsers} updateUserSubscription={updateUserSubscription} />;
+            case 'playground': return <div>Playground Page Placeholder</div>;
+            case 'about': return <AboutUsView />;
+            default: setPage('dashboard'); return null;
         }
     };
+
+    if (!isClient) {
+        return null; // Render nothing on the server to prevent hydration errors
+    }
 
     if (!user) {
         return <AuthView onLogin={handleLogin} />;
@@ -226,6 +231,7 @@ const PhysicsPlatform = () => {
 };
 
 // --- SUB-COMPONENTS (for organization) ---
+// All sub-components like Sidebar, Header, AuthView, etc. go here.
 
 const Sidebar: FC<{ activePage: Page, setPage: (page: Page) => void, userRole: 'USER' | 'ADMIN', onLogout: () => void }> = ({ activePage, setPage, userRole, onLogout }) => {
     const navItems = [
@@ -234,6 +240,7 @@ const Sidebar: FC<{ activePage: Page, setPage: (page: Page) => void, userRole: '
         { id: 'leaderboard', label: 'Leaderboard', icon: BarChart2 },
         { id: 'bookmarks', label: 'Bookmarks', icon: Bookmark },
         { id: 'playground', label: 'Playground', icon: Layers },
+        { id: 'about', label: 'About Us', icon: Info },
     ];
     const adminNavItems = [
         { id: 'admin-questions', label: 'Questions', icon: Edit2 },
@@ -290,18 +297,60 @@ const Header: FC<{ user: User, theme: string, toggleTheme: () => void }> = ({ us
 
 const AuthView: FC<{ onLogin: (email: string) => void }> = ({ onLogin }) => {
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isSignUp, setIsSignUp] = useState(false);
+
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
-            <div className="w-full max-w-md bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
-                <h2 className="text-3xl font-bold text-center mb-2">Welcome Back!</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-center mb-6">Enter details to sign in.</p>
-                <input type="email" placeholder="Email (use 'admin' for admin role)" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-3 border rounded-md mb-4 bg-transparent border-slate-300 dark:border-slate-600" />
-                <input type="password" placeholder="Password (any)" className="w-full p-3 border rounded-md mb-6 bg-transparent border-slate-300 dark:border-slate-600" />
-                <button onClick={() => onLogin(email)} className="w-full bg-blue-500 text-white py-3 rounded-md font-bold hover:bg-blue-600">Sign In</button>
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-[#1a0b3e] via-[#1d114a] to-[#3d2c8d] flex items-center justify-center p-4">
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="w-full max-w-4xl min-h-[600px] bg-[#12082e] rounded-3xl shadow-2xl flex overflow-hidden"
+            >
+                <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-center text-white">
+                    <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-violet-500 rounded-full flex items-center justify-center mb-8">
+                        <BookOpen size={32} />
+                    </div>
+                    <h2 className="text-4xl font-bold mb-4">{isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
+                    <p className="text-slate-400 mb-8">{isSignUp ? 'Join us to start your physics journey.' : 'Enter your credentials to access your dashboard.'}</p>
+                    
+                    <div className="space-y-6">
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-4 pl-12 bg-[#2a1a5e] border border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 focus:outline-none transition" />
+                        </div>
+                        <div className="relative">
+                            <Settings className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-4 pl-12 bg-[#2a1a5e] border border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 focus:outline-none transition" />
+                        </div>
+                    </div>
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => onLogin(email)} className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-4 mt-8 rounded-xl font-semibold text-lg transition-transform">{isSignUp ? 'Sign Up' : 'Login'}</motion.button>
+                    <p className="text-center text-slate-400 text-sm mt-6">
+                        {isSignUp ? 'Already have an account?' : "Not a member?"}
+                        <button onClick={() => setIsSignUp(!isSignUp)} className="font-semibold text-pink-400 hover:underline ml-1">{isSignUp ? 'Sign in' : 'Sign up now'}</button>
+                    </p>
+                </div>
+                <div className="hidden md:flex w-1/2 relative bg-gradient-to-br from-[#2a1a5e] to-[#12082e] flex-col items-center justify-center p-12 text-white">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/clean-gray-paper.png')] opacity-5"></div>
+                    <motion.div className="absolute w-[500px] h-[500px] bg-gradient-to-tr from-violet-600 via-pink-500 to-red-500 rounded-full blur-3xl opacity-30 animate-pulse" animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }}></motion.div>
+                    <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.5 }} className="text-6xl font-bold z-10">Welcome.</motion.h1>
+                    <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5, duration: 0.5 }} className="text-slate-300 mt-4 max-w-sm text-center z-10">Unlock your potential in physics. Interactive quizzes, simulations, and AI-powered feedback await you.</motion.p>
+                </div>
+            </motion.div>
         </div>
     );
 };
+
+const AboutUsView: FC<{}> = () => (
+  <div className="bg-white dark:bg-slate-800 p-8 rounded-lg shadow-sm max-w-4xl mx-auto">
+    <h1 className="text-3xl font-bold mb-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">About PhysicsPulse</h1>
+    <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed mt-6">Welcome to PhysicsPulse, your ultimate destination for mastering A/L Physics in Sri Lanka. Our mission is to make learning physics intuitive, engaging, and accessible for every student.</p>
+    <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed mt-4">This platform was built with passion by a dedicated developer, hoping to inspire the next generation of scientists and engineers in Sri Lanka.</p>
+  </div>
+);
+
+// All other sub-components like DashboardView, QuizSetupView etc. go here. The ones below are complete.
 
 const DashboardView: FC<{ user: User, motivationItems: Motivation[] }> = ({ user, motivationItems }) => {
     const randomMotivation = useMemo(() => motivationItems[Math.floor(Math.random() * motivationItems.length)], [motivationItems]);
@@ -356,7 +405,6 @@ const QuizSetupView: FC<{ startQuiz: (config: any) => void }> = ({ startQuiz }) 
   );
 };
 
-
 const TakingQuizView: FC<{ quiz: any, setQuiz: any, onComplete: () => void, setPage: (page: Page) => void }> = ({ quiz, setQuiz, onComplete, setPage }) => {
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [showFeedback, setShowFeedback] = useState(false);
@@ -380,7 +428,7 @@ const TakingQuizView: FC<{ quiz: any, setQuiz: any, onComplete: () => void, setP
             setShowFeedback(false);
         } else {
             if(true) onComplete(); 
-            setPage('dashboard'); // Go back to dashboard after quiz
+            setPage('dashboard'); 
         }
     };
 
