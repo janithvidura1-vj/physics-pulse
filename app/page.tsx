@@ -331,12 +331,46 @@ const AuthView: FC<{ onLogin: (email: string) => void }> = ({ onLogin }) => {
                         <button onClick={() => setIsSignUp(!isSignUp)} className="font-semibold text-pink-400 hover:underline ml-1">{isSignUp ? 'Sign in' : 'Sign up now'}</button>
                     </p>
                 </div>
-                <div className="hidden md:flex w-1/2 relative bg-gradient-to-br from-[#2a1a5e] to-[#12082e] flex-col items-center justify-center p-12 text-white">
-                    <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/clean-gray-paper.png')] opacity-5"></div>
-                    <motion.div className="absolute w-[500px] h-[500px] bg-gradient-to-tr from-violet-600 via-pink-500 to-red-500 rounded-full blur-3xl opacity-30 animate-pulse" animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }}></motion.div>
-                    <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.5 }} className="text-6xl font-bold z-10">Welcome.</motion.h1>
-                    <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5, duration: 0.5 }} className="text-slate-300 mt-4 max-w-sm text-center z-10">Unlock your potential in physics. Interactive quizzes, simulations, and AI-powered feedback await you.</motion.p>
-                </div>
+               {/* Right Side: The Branding with Einstein */}
+<div className="hidden md:flex w-1/2 relative bg-[#12082e] flex-col items-center justify-center p-12 text-white overflow-hidden">
+    {/* Animated Gradient Background */}
+    <motion.div 
+        className="absolute -bottom-1/4 -right-1/4 w-[600px] h-[600px] bg-gradient-to-tr from-violet-700 via-pink-600 to-red-600 rounded-full blur-3xl opacity-40"
+        animate={{ scale: [1, 1.1, 1], rotate: [0, 10, 0] }}
+        transition={{ duration: 20, repeat: Infinity, repeatType: "mirror" }}
+    />
+
+    {/* Einstein Image with Animation */}
+    <motion.img 
+        src="/einstein.png" 
+        alt="Albert Einstein"
+        className="absolute bottom-0 right-0 h-full w-auto object-cover z-10 opacity-70"
+        initial={{ x: 200, opacity: 0 }}
+        animate={{ x: 0, opacity: 0.7 }}
+        transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+    />
+    
+    {/* Welcome Text */}
+    <div className="z-20 text-left w-full h-full flex flex-col justify-start pt-20">
+         <motion.h1 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
+            className="text-6xl font-bold"
+        >
+            Welcome.
+        </motion.h1>
+        <motion.p 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.2, duration: 0.8 }}
+            className="text-slate-300 mt-4 max-w-xs"
+        >
+            "The important thing is not to stop questioning."
+            <span className="block mt-2 font-semibold">- Albert Einstein</span>
+        </motion.p>
+    </div>
+</div>
             </motion.div>
         </div>
     );
